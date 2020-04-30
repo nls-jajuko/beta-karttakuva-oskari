@@ -25,21 +25,20 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
                 prop: 'type'
             }
         ];
-        this.progressSpinner = Oskari.clazz.create(
-            'Oskari.userinterface.component.ProgressSpinner');
+
     },
     {
         __doSearch: function () {
-            var me = this;
-            var field = this.getField();
-            var button = this.getButton();
-            var searchContainer = this.getContainer();
+            var me = this,
+                field = this.getField(),
+                button = this.getButton(),
+                searchContainer = this.getContainer();
 
             searchContainer.find('div.resultList').empty();
             searchContainer.find('div.info').empty();
             var searchString = field.getValue(this.instance.safeChars);
 
-            if (!searchString || searchString.length == 0) {///!this._validateSearchKey(field.getValue(false))) {
+            if (!searchString || searchString.length == 0) {
                 field.setEnabled(true);
                 button.setEnabled(true);
                 return;
