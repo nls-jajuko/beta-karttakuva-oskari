@@ -112,9 +112,19 @@ Oskari.clazz.define(
             + '&size=10'
             + '&text=' + searchString;
 
+        if (this.similar_controller) {
+            this.similar_controller.abort();
+        }
+        this.similar_controller = new AbortController();
+        this.similar_signal = this.similar_controller.signal;
+
         fetch(url, {
-            method: 'get'
+            method: 'get',
+            signal: this.similar_signal
         }).then(r => r.json()).then(json => {
+            if (!json.terms || !json.terms.length) {
+                return;
+            }
 
             var autocompleteValues = json.terms.map(f => {
                 return {
