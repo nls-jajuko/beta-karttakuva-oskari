@@ -67,11 +67,6 @@ Oskari.clazz.define(
             signal: this.geocoding_signal
         }).then(r => r.json()).then(json => {
             let res = {
-                "methods": [
-                    {},
-                    {},
-                    {}
-                ],
                 "locations": [],
                 "totalCount": 0
             };
@@ -123,7 +118,7 @@ Oskari.clazz.define(
 
             var autocompleteValues = json.terms.map(f => {
                 return {
-                    value: f.text, data: f.text
+                    value: '"' + f.text + '"', data: f.text
                 };
             });
 
