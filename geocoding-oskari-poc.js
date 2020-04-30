@@ -49,6 +49,7 @@ Oskari.clazz.define(
 
         let url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
             + '/geocoding/v1/pelias/search?'
+            + '&sources=addresses,geographic-names'
             + '&lang=' + lang
             + '&api-key=7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2'
             + '&crs=http://www.opengis.net/def/crs/EPSG/0/' + epsgCode
@@ -99,15 +100,45 @@ Oskari.clazz.define(
     },
     __doAutocompleteSearch: function () {
         this.__doSearch();
+
+
+        let lang = Oskari.getLang(),
+            field = this.getField(),
+            searchString = field.getValue(this.instance.safeChars);
+
+        if (!searchString || searchString.length == 0) {
+            return;
+        }
+
+        let url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
+            + '/geocoding/v1/searchterm/similar?'
+            + '&lang=' + lang
+            + '&api-key=7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2'
+            + '&size=10'
+            + '&text=' + searchString;
+
+        fetch(url, {
+            method: 'get'
+        }).then(r => r.json()).then(json => {
+
+            var autocompleteValues = json.terms.map(f => {
+                return {
+                    value: f.text, data: f.text
+                };
+            });
+
+            field.autocomplete(autocompleteValues);
+        }).catch(function (err) {
+        })
     },
     _validateSearchKey: function (key) { return true; }
 }, {
     extend: ['Oskari.mapframework.bundle.search.DefaultView']
 });
 
-/** hack */
-function add() {
-    let ui = jQuery('<div />'),
+/** 'install' */
+(function () {
+    let tab = jQuery('<div />'),
         sandbox = Oskari.getSandbox(),
         lang = Oskari.getLang(),
         search = sandbox.findRegisteredModuleInstance('Search'),
@@ -120,14 +151,11 @@ function add() {
     search.conf.autocomplete = true;
 
     let view = Oskari.clazz.create('Oskari.mapframework.bundle.search.GeocodingView', search);
-    view.createUi(ui);
+    view.createUi(tab);
 
     let priority = 2,//this.tabPriority,
-        id = 'oskari_metadatacatalogue_tabpanel_header',
-        req = Oskari.requestBuilder('Search.AddTabRequest')(title, ui, priority, id);
+        id = 'oskari_search_tabpanel_header',
+        req = Oskari.requestBuilder('Search.AddTabRequest')(title, tab, priority, id);
 
     sandbox.request(search, req);
-}
-
-add();
-
+})();
