@@ -101,11 +101,9 @@ Oskari.clazz.define(
         this.__doSearch();
     },
     _validateSearchKey: function (key) { return true; }
-},
-    {
-        extend: ['Oskari.mapframework.bundle.search.DefaultView']
-    }
-)
+}, {
+    extend: ['Oskari.mapframework.bundle.search.DefaultView']
+});
 
 /** hack */
 function add() {
