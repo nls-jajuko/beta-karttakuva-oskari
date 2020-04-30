@@ -10,6 +10,9 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
         this.resultActions = {};
         this._searchContainer = null;
 
+        this.geocoding_controller = new AbortController(),
+            this.geocoding_signal = this.geocoding_controller.signal;
+
         this.resultHeaders = [
             {
                 title: this.instance.getLocalization('grid').name,
@@ -22,7 +25,8 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
                 prop: 'type'
             }
         ];
-        this.progressSpinner = Oskari.clazz.create('Oskari.userinterface.component.ProgressSpinner');
+        this.progressSpinner = Oskari.clazz.create(
+            'Oskari.userinterface.component.ProgressSpinner');
     },
     {
         __doSearch: function () {
@@ -35,7 +39,7 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
             searchContainer.find('div.info').empty();
             var searchString = field.getValue(this.instance.safeChars);
 
-            if (!this._validateSearchKey(field.getValue(false))) {
+            if (!searchString || searchString.length == 0) {///!this._validateSearchKey(field.getValue(false))) {
                 field.setEnabled(true);
                 button.setEnabled(true);
                 return;
@@ -44,16 +48,29 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
             var self = this,
                 lang = Oskari.getLang(),
                 sb = this.sandbox || Oskari.getSandbox(),
+                epsg = sb.findRegisteredModuleInstance('MainMapModule').getProjection(),
+                epsgCode = epsg.split(':')[1],
                 evtBuilder = Oskari.eventBuilder('SearchResultEvent');
 
-            var url = 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?' 
-                  +'&lang='+lang
-                  +'&api-key=7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2'
-                  +'&crs=http://www.opengis.net/def/crs/EPSG/0/3067' ///? EPSG
-                  +'&size=50'
-                  +'&text=' + searchString
+            var url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
+                + '/geocoding/v1/pelias/search?'
+                + '&lang=' + lang
+                + '&api-key=7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2'
+                + '&crs=http://www.opengis.net/def/crs/EPSG/0/' + epsgCode
+                + '&size=50'
+                + '&text=' + searchString;
 
-            fetch(url).
+            if (this.geocoding_controller) {
+                this.geocoding_controller.abort();
+                /* don't know how to reuse - aborts early if reused */
+                this.geocoding_controller = new AbortController();
+                this.geocoding_signal = this.geocoding_controller.signal;
+            }
+
+            fetch(url, {
+                method: 'get',
+                signal: this.geocoding_signal
+            }).
                 then(r => r.json()).
                 then(json => {
                     let res = {
@@ -83,6 +100,8 @@ Oskari.clazz.define('Oskari.mapframework.bundle.search.GeocodingView',
                     });
                     res.totalCount = res.locations.length;
                     self.handleSearchResult(true, res, searchString);
+                }).catch(function (err) {
+                    //geocoding_reset_list(listEl);
                 });
         },
         __doAutocompleteSearch: function () {
