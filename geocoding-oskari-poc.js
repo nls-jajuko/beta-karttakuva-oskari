@@ -30,10 +30,14 @@ Oskari.clazz.define(
             field = this.getField(),
             button = this.getButton(),
             searchContainer = this.getContainer(),
-            searchString = field.getValue(this.instance.safeChars);
+            searchString = field.getValue(this.instance.safeChars),
+            resultsEl = searchContainer[0].querySelectorAll('div.resultList'),
+            infoEl = searchContainer[0].querySelectorAll('div.info');
 
-        searchContainer.find('div.resultList').empty();
-        searchContainer.find('div.info').empty();
+        while (resultsEl.firstChild)
+            resultsEl.removeChild(resultsEl.firstChild);
+        while (infoEl.firstChild)
+            infoEl.removeChild(infoEl.firstChild);
 
         if (!searchString || searchString.length == 0) {
             field.setEnabled(true);
@@ -43,8 +47,8 @@ Oskari.clazz.define(
 
         let self = this,
             lang = Oskari.getLang(),
-            sb = this.sandbox || Oskari.getSandbox(),
-            epsg = sb.findRegisteredModuleInstance('MainMapModule').getProjection(),
+            sandbox = this.sandbox,
+            epsg = sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
             epsgCode = epsg.split(':')[1];
 
         let url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
@@ -143,7 +147,7 @@ Oskari.clazz.define(
 
 /** 'install' */
 (function () {
-    let tab = jQuery('<div />'),
+    let tab = document.createElement("div"),
         sandbox = Oskari.getSandbox(),
         lang = Oskari.getLang(),
         search = sandbox.findRegisteredModuleInstance('Search'),
@@ -158,9 +162,6 @@ Oskari.clazz.define(
     let view = Oskari.clazz.create('Oskari.mapframework.bundle.search.GeocodingView', search);
     view.createUi(tab);
 
-    let priority = 2,//this.tabPriority,
-        id = 'oskari_search_tabpanel_header',
-        req = Oskari.requestBuilder('Search.AddTabRequest')(title, tab, priority, id);
-
-    sandbox.request(search, req);
+    sandbox.request(search, Oskari.requestBuilder('Search.AddTabRequest')(
+        title, tab, 2, 'oskari_search_tabpanel_header'));
 })();
