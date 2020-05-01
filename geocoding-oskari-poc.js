@@ -26,7 +26,11 @@ Oskari.clazz.define(
         });
     }, {
     __doSearch: function () {
-        let me = this,
+        let self = this,
+            lang = Oskari.getLang(),
+            sandbox = this.sandbox,
+            epsg = sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
+            epsgCode = epsg.split(':')[1],
             field = this.getField(),
             button = this.getButton(),
             searchContainer = this.getContainer(),
@@ -44,12 +48,6 @@ Oskari.clazz.define(
             button.setEnabled(true);
             return;
         }
-
-        let self = this,
-            lang = Oskari.getLang(),
-            sandbox = this.sandbox,
-            epsg = sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
-            epsgCode = epsg.split(':')[1];
 
         let url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
             + '/geocoding/v1/pelias/search?'
@@ -71,25 +69,22 @@ Oskari.clazz.define(
             signal: this.geocoding_signal
         }).then(r => r.json()).then(json => {
             let res = {
-                "locations": [],
-                "totalCount": 0
+                locations: json.features.map(f => {
+                    let fprops = f.properties;
+                    return {
+                        "zoomScale": 5000,
+                        "name": fprops.label,
+                        "rank": fprops.rank,
+                        "lon": f.geometry.coordinates[0],
+                        "id": fprops.placeId,
+                        "type": fprops['label:placeType'],
+                        "region": fprops['label:municipality'],
+                        "village": fprops['label'],
+                        "lat": f.geometry.coordinates[1],
+                        "channelId": "REGISTER_OF_NOMENCLATURE_CHANNEL"
+                    }
+                })
             };
-
-            res.locations = json.features.map(f => {
-                let fprops = f.properties;
-                return {
-                    "zoomScale": 5000,
-                    "name": fprops.label,
-                    "rank": fprops.rank,
-                    "lon": f.geometry.coordinates[0],
-                    "id": fprops.placeId,
-                    "type": fprops['label:placeType'],
-                    "region": fprops['label:municipality'],
-                    "village": fprops['label'],
-                    "lat": f.geometry.coordinates[1],
-                    "channelId": "REGISTER_OF_NOMENCLATURE_CHANNEL"
-                };
-            });
             res.totalCount = res.locations.length;
 
             self.handleSearchResult(true, res, searchString);
@@ -98,9 +93,6 @@ Oskari.clazz.define(
         });
     },
     __doAutocompleteSearch: function () {
-        this.__doSearch();
-
-
         let lang = Oskari.getLang(),
             field = this.getField(),
             searchString = field.getValue(this.instance.safeChars);
@@ -108,6 +100,8 @@ Oskari.clazz.define(
         if (!searchString || searchString.length == 0) {
             return;
         }
+
+        this.__doSearch();
 
         let url = 'https://avoin-paikkatieto.maanmittauslaitos.fi'
             + '/geocoding/v1/searchterm/similar?'
@@ -130,7 +124,7 @@ Oskari.clazz.define(
                 return;
             }
 
-            var autocompleteValues = json.terms.map(f => {
+            let autocompleteValues = json.terms.map(f => {
                 return {
                     value: '"' + f.text + '"', data: f.text
                 };
