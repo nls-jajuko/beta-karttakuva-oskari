@@ -126,7 +126,7 @@ Oskari.clazz.define(
 
             let autocompleteValues = json.terms.map(f => {
                 return {
-                    value: '"' + f.text + '"', data: f.text
+                    value: f.text.indexOf(' ')!=-1? '"' + f.text + '"' : f.text, data: f.text
                 };
             });
 
