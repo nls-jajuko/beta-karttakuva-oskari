@@ -173,25 +173,30 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
             });
             this.lastSimilarString = searchString;
 
-            let similarEl = this.similarEl;
-            while (similarEl.firstChild)
-                similarEl.removeChild(similarEl.firstChild);
-
-            autocompleteValues.forEach(e => {
-                let spacing = document.createTextNode(' '),
-                    el = document.createElement('a');
-                el.setAttribute('href', 'javascript:void(0)');
-                el.innerHTML = e.value;
-                el.dataset.value = e.value;
-                el.addEventListener("click", ev => {
-                    field.setValue(ev.target.dataset.value);
-                    self.__doAutocompleteSearch();
-                });
-                similarEl.appendChild(el);
-                similarEl.appendChild(spacing);
-            });
+            self.renderSimilar(autocompleteValues);
 
         }).catch(function (err) {
+        });
+    }
+
+    renderSimilar(autocompleteValues) {
+        let similarEl = this.similarEl,
+            self = this;
+        while (similarEl.firstChild)
+            similarEl.removeChild(similarEl.firstChild);
+
+        autocompleteValues.forEach(e => {
+            let spacing = document.createTextNode(' '),
+                el = document.createElement('a');
+            el.setAttribute('href', 'javascript:void(0)');
+            el.innerHTML = e.value;
+            el.dataset.value = e.value;
+            el.addEventListener("click", ev => {
+                self.getField().setValue(ev.target.dataset.value);
+                self.__doAutocompleteSearch();
+            });
+            similarEl.appendChild(el);
+            similarEl.appendChild(spacing);
         });
     }
 
@@ -305,22 +310,25 @@ class GeocodingBundle {
     }
 }
 
+const Geocoding_name = 'geocoding',
+    Geocoding_class = "Oskari.geocoding.GeocodingBundle";
+
 Oskari.clazz.defineES(
-    "Oskari.geocoding.GeocodingBundle",
+    Geocoding_class,
     GeocodingBundle, {
     "protocol": ["Oskari.bundle.Bundle",
         "Oskari.mapframework.bundle.extension.ExtensionBundle"],
     "bundle": {
         "manifest": {
-            "Bundle-Identifier": "geocoding",
-            "Bundle-Name": "geocoding",
+            "Bundle-Identifier": Geocoding_name,
+            "Bundle-Name": Geocoding_name,
             "Bundle-Version": "1.0.0",
         }
     }
 });
 
-Oskari.bundle_manager.installBundleClass("geocoding",
-    "Oskari.geocoding.GeocodingBundle");
+Oskari.bundle_manager.installBundleClass(Geocoding_name,
+    Geocoding_class);
 
 /* test */
 new GeocodingBundle().create().start();

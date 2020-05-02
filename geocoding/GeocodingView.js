@@ -114,25 +114,30 @@ export class GeocodingView extends SearchDefaultView {
             });
             this.lastSimilarString = searchString;
 
-            let similarEl = this.similarEl;
-            while (similarEl.firstChild)
-                similarEl.removeChild(similarEl.firstChild);
-
-            autocompleteValues.forEach(e => {
-                let spacing = document.createTextNode(' '),
-                    el = document.createElement('a');
-                el.setAttribute('href', 'javascript:void(0)');
-                el.innerHTML = e.value;
-                el.dataset.value = e.value;
-                el.addEventListener("click", ev => {
-                    field.setValue(ev.target.dataset.value);
-                    self.__doAutocompleteSearch();
-                });
-                similarEl.appendChild(el);
-                similarEl.appendChild(spacing);
-            });
+            self.renderSimilar(autocompleteValues);
 
         }).catch(function (err) {
+        });
+    }
+
+    renderSimilar(autocompleteValues) {
+        let similarEl = this.similarEl,
+            self = this;
+        while (similarEl.firstChild)
+            similarEl.removeChild(similarEl.firstChild);
+
+        autocompleteValues.forEach(e => {
+            let spacing = document.createTextNode(' '),
+                el = document.createElement('a');
+            el.setAttribute('href', 'javascript:void(0)');
+            el.innerHTML = e.value;
+            el.dataset.value = e.value;
+            el.addEventListener("click", ev => {
+                self.getField().setValue(ev.target.dataset.value);
+                self.__doAutocompleteSearch();
+            });
+            similarEl.appendChild(el);
+            similarEl.appendChild(spacing);
         });
     }
 
