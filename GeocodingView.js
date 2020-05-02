@@ -2,8 +2,8 @@ import GeocodingService from './GeocodingService';
 
 const SearchDefaultView = Oskari.clazz.get('Oskari.mapframework.bundle.search.DefaultView');
 
-export /* Geocoding Tab for Oskari */
-class GeocodingView extends SearchDefaultView {
+/* Geocoding Tab for Oskari */
+export class GeocodingView extends SearchDefaultView {
     constructor(instance) {
         super(instance);
         let epsg = this.sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
