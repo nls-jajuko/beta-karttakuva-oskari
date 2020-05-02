@@ -213,23 +213,111 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
     }
 }
 
-/** 'install' */
-(function () {
-    let tab = document.createElement("div"),
-        sandbox = Oskari.getSandbox(),
-        lang = Oskari.getLang(),
-        search = sandbox.findRegisteredModuleInstance('Search'),
-        title = {
-            'fi': 'Geokoodauspalvelu',
-            'sv': 'Geokodning',
-            'en': 'Geocoding'
-        }[lang];
 
-    search.conf.autocomplete = true;
 
-    let view = new GeocodingView(search);
-    view.createUi(tab);
+Oskari.registerLocalization(
+    {
+        "lang": "fi",
+        "key": "Geocoding",
+        "value": {
+            "title": "Haku",
+            "desc": "",
+            "tabTitle": "Paikkahaku",
+            "invalid_characters": "Hakusanassa on kiellettyjä merkkejä. Sallittuja merkkejä ovat aakkoset (a-ö, A-Ö), numerot (0-9) sekä piste (.), pilkku (,), yhdysviiva (-) ja huutomerkki (!). Voit myös korvata sanassa yhden merkin kysymysmerkillä (?) tai sana loppuosan jokerimerkillä (*).",
+            "searchDescription": "Hae paikkoja paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella.",
+            "searchAssistance": "Anna hakusana",
+            "searchResultCount": "Hakusanalla löytyi",
+            "searchResultCount2": "hakutulosta.",
+            "searchResultDescriptionMoreResults": "Rajaa hakutulosten määrää tarkentamalla hakusanaa.",
+            "searchResultDescriptionOrdering": "Järjestä hakutulokset klikkaamalla sarakkeen otsikkoa alla olevassa taulukossa.",
+            "searchResults": "Hakutulokset:",
+            "searchResultsDescription": "hakutulosta hakusanalla",
+            "searchservice_search_alert_title": "Virhe",
+            "searchservice_search_not_found_anything_text": "Hakusanalla ei löytynyt yhtään hakutulosta. Tarkista hakusanan oikeinkirjoitus.",
+            "too_short": "Hakusana on liian lyhyt. Hakusanassa on oltava vähintään yksi merkki. Jos käytät jokerimerkkiä (*), hakusanassa on oltava vähintään neljä muuta merkkiä.",
+            "cannot_be_empty": "Hakusanassa on oltava vähintään yksi merkki.",
+            "too_many_stars": "Hakusanassa saa olla enintään yksi jokerimerkki (*) sanan lopussa.",
+            "generic_error": "Haku epäonnistui.",
+            "grid": {
+                "name": "Nimi",
+                "village": "Kunta",
+                "region": "Alue",
+                "type": "Tyyppi"
+            },
+            "resultBox": {
+                "close": "Sulje",
+                "title": "Hakutulokset",
+                "alternatives": "Tällä paikalla on seuraavia vaihtoehtoisia nimiä:"
+            },
+            "guidedTour": {
+                "title": "Haku",
+                "message": "Haku-valikossa voit hakea paikkoja tai paikkatietoja. <br/><br/>  Paikkahaku: Hae paikkoja paikannimen, osoitteen tai kiinteistötunnuksen perusteella. Klikkaa hakutulosta ja kartta keskittyy valittuun paikkaan. <br/><br/> Metatietohaku: Hae paikkatietoaineistoja, -aineistosarjoja ja -palveluja. Käytä tekstihakua tai valmiiksi määriteltyjä hakuehtoja. Hakutuloksista pääset lukemaan metatietokuvailun tai avaamaan valitun aineiston kartalla, jos karttataso on saatavilla.",
+                "openLink": "Näytä Haku",
+                "closeLink": "Piilota Haku",
+                "tileText": "Haku"
+            }
+        }
+    });
 
-    sandbox.request(search, Oskari.requestBuilder('Search.AddTabRequest')(
-        title, tab, 2, 'oskari_search_tabpanel_header'));
-})();
+/** extension module class */
+const UIDefaultExtension = Oskari.clazz.get('Oskari.userinterface.extension.DefaultModule');
+
+class GeocodingExtension extends UIDefaultExtension {
+    name = 'Geocoding';
+
+    conf = {
+        autocomplete: true
+
+    }
+
+    eventHandlers = {
+        'userinterface.ExtensionUpdatedEvent': ev => {
+            console.log(ev);
+        }
+    }
+
+    afterStart(sandbox) {
+        let tab = document.createElement("div"),
+            lang = Oskari.getLang(),
+            title = {
+                'fi': 'Geokoodauspalvelu',
+                'sv': 'Geokodning',
+                'en': 'Geocoding'
+            }[lang];
+
+        let view = new GeocodingView(this);
+        view.createUi(tab);
+
+        sandbox.request(this, Oskari.requestBuilder('Search.AddTabRequest')(
+            title, tab, 2, 'oskari_search_tabpanel_header'));
+
+
+    }
+}
+
+/* bundle registry operations */
+class GeocodingBundle {
+    create() {
+        return new GeocodingExtension();
+    }
+}
+
+Oskari.clazz.defineES(
+    "Oskari.geocoding.GeocodingBundle",
+    GeocodingBundle, {
+    "protocol": ["Oskari.bundle.Bundle",
+        "Oskari.mapframework.bundle.extension.ExtensionBundle"],
+    "bundle": {
+        "manifest": {
+            "Bundle-Identifier": "geocoding",
+            "Bundle-Name": "geocoding",
+            "Bundle-Version": "1.0.0",
+        }
+    }
+});
+
+Oskari.bundle_manager.installBundleClass("geocoding",
+    "Oskari.geocoding.GeocodingBundle");
+
+/* test */
+new GeocodingBundle().create().start();
