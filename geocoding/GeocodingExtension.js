@@ -7,8 +7,11 @@ export class GeocodingExtension extends UIDefaultExtension {
     name = 'Geocoding';
 
     conf = {
-        autocomplete: true
-
+        autocomplete: true,
+        urls: {
+            search: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?',
+            similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?'
+        }
     }
 
     eventHandlers = {
@@ -19,12 +22,7 @@ export class GeocodingExtension extends UIDefaultExtension {
 
     afterStart(sandbox) {
         let tab = document.createElement("div"),
-            lang = Oskari.getLang(),
-            title = {
-                'fi': 'Geokoodauspalvelu',
-                'sv': 'Geokodning',
-                'en': 'Geocoding'
-            }[lang];
+            title = this.getLocalization('tabTitle');
 
         let view = new GeocodingView(this);
         view.createUi(tab);

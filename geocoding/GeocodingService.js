@@ -1,21 +1,22 @@
 /* Geocoding Service for Oskari */
 export class GeocodingService {
+
+    queryParams = {
+        'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
+        'sources': 'geographic-names',
+    }
+
     constructor(urls, epsgCode, lang) {
         this.urls = urls;
-        this.queryParams = {
-            'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
-            'sources': 'geographic-names',
-            'crs': 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode,
-            'lang': lang
-        }
+        this.queryParams.crs = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
+        this.queryParams.lang = lang;
     }
 
     search(searchString) {
-        let url =
-            this.geocodingURL('search', {
-                'size': '50',
-                'text': searchString
-            });
+        let url = this.geocodingURL('search', {
+            'size': '50',
+            'text': searchString
+        });
 
         if (this.geocoding_controller) {
             this.geocoding_controller.abort();

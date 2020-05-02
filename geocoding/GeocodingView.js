@@ -9,10 +9,8 @@ export class GeocodingView extends SearchDefaultView {
         let epsg = this.sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
             epsgCode = epsg.split(':')[1],
             lang = Oskari.getLang(),
-            urls = {
-                search: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?',
-                similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?'
-            };
+            urls = instance.conf.urls;
+
         this.service = new GeocodingService(urls, epsgCode, lang);
         this.lastSearchString = undefined;
     }
@@ -27,6 +25,16 @@ export class GeocodingView extends SearchDefaultView {
 
     }
 
+    __checkSearchString(searchString) {
+        if (!searchString || searchString.length == 0) {
+            return false;
+        }
+        if (this.lastSearchString === searchString) {
+            return false;
+        }
+        return true;
+    }
+
     __doSearch() {
         let self = this,
             field = this.getField(),
@@ -38,13 +46,7 @@ export class GeocodingView extends SearchDefaultView {
 
 
 
-        if (!searchString || searchString.length == 0) {
-            self.progressSpinner.stop();
-            field.setEnabled(true);
-            button.setEnabled(true);
-            return;
-        }
-        if (this.lastSearchString === searchString) {
+        if (!this.__checkSearchString(searchString)) {
             self.progressSpinner.stop();
             field.setEnabled(true);
             button.setEnabled(true);
@@ -106,7 +108,8 @@ export class GeocodingView extends SearchDefaultView {
 
             let autocompleteValues = json.terms.map(f => {
                 return {
-                    value: f.text.indexOf(' ') != -1 ? '"' + f.text + '"' : f.text, data: f.text
+                    value: f.text.indexOf(' ') != -1 ? '"' + f.text + '"' : f.text,
+                    data: f.text
                 };
             });
             this.lastSimilarString = searchString;
@@ -138,19 +141,6 @@ export class GeocodingView extends SearchDefaultView {
     }
 
     __getSearchResultHeader(count, hasMore) {
-        if (count < 0) {
-            return "";
-        }
-        var intro = _.template(this.instance.getLocalization('searchResultCount') + ' ${count} ' +
-            this.instance.getLocalization('searchResultCount2'));
-        var msg = intro({ count: count });
-        msg = msg + '<br/>';
-
-        if (hasMore) {
-            // more results available
-            msg = msg + this.instance.getLocalization('searchResultDescriptionMoreResults');
-            msg = msg + '<br/>';
-        }
-        return msg + this.instance.getLocalization('searchResultDescriptionOrdering');
+        return "";
     }
 }

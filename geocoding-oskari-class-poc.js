@@ -1,14 +1,15 @@
 /* Geocoding Service for Oskari */
 class GeocodingService {
+
+    queryParams = {
+        'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
+        'sources': 'geographic-names',
+    }
+
     constructor(urls, epsgCode, lang) {
         this.urls = urls;
-        this.queryParams = {
-            'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
-            'sources': 'geographic-names',
-            'crs': 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode,
-            'lang': lang
-        }
-
+        this.queryParams.crs = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
+        this.queryParams.lang = lang;
     }
 
     search(searchString) {
@@ -67,10 +68,8 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
         let epsg = this.sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
             epsgCode = epsg.split(':')[1],
             lang = Oskari.getLang(),
-            urls = {
-                search: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?',
-                similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?'
-            };
+            urls = instance.conf.urls;
+
         this.service = new GeocodingService(urls, epsgCode, lang);
         this.lastSearchString = undefined;
     }
@@ -85,6 +84,16 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
 
     }
 
+    __checkSearchString(searchString) {
+        if (!searchString || searchString.length == 0) {
+            return false;
+        }
+        if (this.lastSearchString === searchString) {
+            return false;
+        }
+        return true;
+    }
+
     __doSearch() {
         let self = this,
             field = this.getField(),
@@ -96,13 +105,7 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
 
 
 
-        if (!searchString || searchString.length == 0) {
-            self.progressSpinner.stop();
-            field.setEnabled(true);
-            button.setEnabled(true);
-            return;
-        }
-        if (this.lastSearchString === searchString) {
+        if (!this.__checkSearchString(searchString)) {
             self.progressSpinner.stop();
             field.setEnabled(true);
             button.setEnabled(true);
@@ -164,7 +167,8 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
 
             let autocompleteValues = json.terms.map(f => {
                 return {
-                    value: f.text.indexOf(' ') != -1 ? '"' + f.text + '"' : f.text, data: f.text
+                    value: f.text.indexOf(' ') != -1 ? '"' + f.text + '"' : f.text,
+                    data: f.text
                 };
             });
             this.lastSimilarString = searchString;
@@ -222,7 +226,7 @@ Oskari.registerLocalization(
         "value": {
             "title": "Haku",
             "desc": "",
-            "tabTitle": "Paikkahaku",
+            "tabTitle": "Geokoodauspalvelu",
             "invalid_characters": "Hakusanassa on kiellettyjä merkkejä. Sallittuja merkkejä ovat aakkoset (a-ö, A-Ö), numerot (0-9) sekä piste (.), pilkku (,), yhdysviiva (-) ja huutomerkki (!). Voit myös korvata sanassa yhden merkin kysymysmerkillä (?) tai sana loppuosan jokerimerkillä (*).",
             "searchDescription": "Hae paikkoja paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella.",
             "searchAssistance": "Anna hakusana",
@@ -266,7 +270,11 @@ class GeocodingExtension extends UIDefaultExtension {
     name = 'Geocoding';
 
     conf = {
-        autocomplete: true
+        autocomplete: true,
+        urls: {
+            search: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?',
+            similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?'
+        }
 
     }
 
@@ -278,12 +286,7 @@ class GeocodingExtension extends UIDefaultExtension {
 
     afterStart(sandbox) {
         let tab = document.createElement("div"),
-            lang = Oskari.getLang(),
-            title = {
-                'fi': 'Geokoodauspalvelu',
-                'sv': 'Geokodning',
-                'en': 'Geocoding'
-            }[lang];
+            title = this.getLocalization('tabTitle');
 
         let view = new GeocodingView(this);
         view.createUi(tab);
