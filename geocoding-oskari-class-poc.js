@@ -3,7 +3,7 @@ class GeocodingService {
 
     queryParams = {
         'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
-        'sources': 'geographic-names',
+        'sources': 'geographic-names'
     }
 
     constructor(urls, epsgCode, lang) {
