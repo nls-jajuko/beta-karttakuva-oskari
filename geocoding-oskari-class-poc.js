@@ -310,25 +310,28 @@ class GeocodingBundle {
     }
 }
 
-const Geocoding_name = 'geocoding',
-    Geocoding_class = "Oskari.geocoding.GeocodingBundle";
-
-Oskari.clazz.defineES(
-    Geocoding_class,
-    GeocodingBundle, {
-    "protocol": ["Oskari.bundle.Bundle",
-        "Oskari.mapframework.bundle.extension.ExtensionBundle"],
-    "bundle": {
-        "manifest": {
-            "Bundle-Identifier": Geocoding_name,
-            "Bundle-Name": Geocoding_name,
-            "Bundle-Version": "1.0.0",
+function register(impl, bundleId, implClassName) {
+    Oskari.clazz.defineES(
+        implClassName,
+        impl, {
+        "protocol": ["Oskari.bundle.Bundle",
+            "Oskari.mapframework.bundle.extension.ExtensionBundle"],
+        "bundle": {
+            "manifest": {
+                "Bundle-Identifier": bundleId,
+                "Bundle-Name": bundleId,
+                "Bundle-Version": "1.0.0",
+            }
         }
-    }
-});
+    });
 
-Oskari.bundle_manager.installBundleClass(Geocoding_name,
-    Geocoding_class);
+    Oskari.bundle_manager.installBundleClass(bundleId,
+        implClassName);
+}
+
+register(GeocodingBundle,'geocoding',"Oskari.geocoding.GeocodingBundle");
+
+
 
 /* test */
 new GeocodingBundle().create().start();
