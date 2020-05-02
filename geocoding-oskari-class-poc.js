@@ -4,7 +4,7 @@ class GeocodingService {
         this.urls = urls;
         this.queryParams = {
             'api-key': '7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2',
-            'sources': 'addresses,geographic-names',
+            'sources': 'geographic-names',
             'crs': 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode,
             'lang': lang
         }
