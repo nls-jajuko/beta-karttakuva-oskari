@@ -3,7 +3,7 @@ import GeocodingService from './GeocodingService';
 const SearchDefaultView = Oskari.clazz.get('Oskari.mapframework.bundle.search.DefaultView');
 
 /* Geocoding Tab for Oskari */
-export class GeocodingView extends SearchDefaultView {
+export class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.DefaultView') {
     constructor(instance) {
         super(instance);
         let epsg = this.sandbox.findRegisteredModuleInstance('MainMapModule').getProjection(),
@@ -141,11 +141,55 @@ export class GeocodingView extends SearchDefaultView {
         });
     }
 
+    nearby(lonlat) {
+        let self = this,
+            field = this.getField(),
+            searchContainer = this.getContainer(),
+            searchString = field.getValue(this.instance.safeChars),
+            resultsEl = searchContainer[0].querySelectorAll('div.resultList'),
+            infoEl = searchContainer[0].querySelectorAll('div.info');
+
+        while (resultsEl.firstChild)
+            resultsEl.removeChild(resultsEl.firstChild);
+        while (infoEl.firstChild)
+            infoEl.removeChild(infoEl.firstChild);
+
+        this.service.reverse(lonlat).then(r => r.json()).then(json => {
+            let res = {
+                locations: json.features.map(f => {
+                    return {
+                        "zoomScale": 5000,
+                        "name": f.properties.label,
+                        "rank": f.properties.rank,
+                        "lon": f.geometry.coordinates[0],
+                        "id": f.properties.placeId,
+                        "type": f.properties['label:placeType'],
+                        "region": f.properties['label:municipality'],
+                        "village": f.properties['label'],
+                        "lat": f.geometry.coordinates[1],
+                        "channelId": "GEOCODING"
+                    }
+                })
+            };
+            res.totalCount = res.locations.length;
+            if (res.totalCount == 0) {
+                res.totalCount = -2;
+            }
+            self.lastSearchString = searchString;
+            self.handleSearchResult(true, res, searchString);
+
+        }).catch(function (err) {
+            /* we fail often due to autocomplete*/
+        });
+
+    }
+
     _validateSearchKey(key) {
         return true;
     }
 
     __getSearchResultHeader(count, hasMore) {
         return "";
+
     }
 }

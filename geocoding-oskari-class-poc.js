@@ -9,6 +9,7 @@ class GeocodingService {
     constructor(urls, epsgCode, lang) {
         this.urls = urls;
         this.queryParams.crs = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
+        this.queryParams['request-crs'] = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
         this.queryParams.lang = lang;
     }
 
@@ -17,6 +18,27 @@ class GeocodingService {
             this.geocodingURL('search', {
                 'size': '50',
                 'text': searchString
+            });
+
+        if (this.geocoding_controller) {
+            this.geocoding_controller.abort();
+        }
+        this.geocoding_controller = new AbortController();
+        this.geocoding_signal = this.geocoding_controller.signal;
+
+        return fetch(url, {
+            method: 'get',
+            signal: this.geocoding_signal
+        });
+    }
+
+    reverse(lonlat) {
+        let url =
+            this.geocodingURL('reverse', {
+                'size': '20',
+                'boundary.circle.radius': 100,
+                'point.lon': lonlat.lon,
+                'point.lat': lonlat.lat
             });
 
         if (this.geocoding_controller) {
@@ -200,25 +222,55 @@ class GeocodingView extends Oskari.clazz.get('Oskari.mapframework.bundle.search.
         });
     }
 
+    nearby(lonlat) {
+        let self = this,
+            field = this.getField(),
+            searchContainer = this.getContainer(),
+            searchString = field.getValue(this.instance.safeChars),
+            resultsEl = searchContainer[0].querySelectorAll('div.resultList'),
+            infoEl = searchContainer[0].querySelectorAll('div.info');
+
+        while (resultsEl.firstChild)
+            resultsEl.removeChild(resultsEl.firstChild);
+        while (infoEl.firstChild)
+            infoEl.removeChild(infoEl.firstChild);
+
+        this.service.reverse(lonlat).then(r => r.json()).then(json => {
+            let res = {
+                locations: json.features.map(f => {
+                    return {
+                        "zoomScale": 5000,
+                        "name": f.properties.label,
+                        "rank": f.properties.rank,
+                        "lon": f.geometry.coordinates[0],
+                        "id": f.properties.placeId,
+                        "type": f.properties['label:placeType'],
+                        "region": f.properties['label:municipality'],
+                        "village": f.properties['label'],
+                        "lat": f.geometry.coordinates[1],
+                        "channelId": "GEOCODING"
+                    }
+                })
+            };
+            res.totalCount = res.locations.length;
+            if (res.totalCount == 0) {
+                res.totalCount = -2;
+            }
+            self.lastSearchString = searchString;
+            self.handleSearchResult(true, res, searchString);
+
+        }).catch(function (err) {
+            /* we fail often due to autocomplete*/
+        });
+
+    }
+
     _validateSearchKey(key) {
         return true;
     }
 
     __getSearchResultHeader(count, hasMore) {
-        if (count < 0) {
-            return "";
-        }
-        var intro = _.template(this.instance.getLocalization('searchResultCount') + ' ${count} ' +
-            this.instance.getLocalization('searchResultCount2'));
-        var msg = intro({ count: count });
-        msg = msg + '<br/>';
-
-        if (hasMore) {
-            // more results available
-            msg = msg + this.instance.getLocalization('searchResultDescriptionMoreResults');
-            msg = msg + '<br/>';
-        }
-        return msg + this.instance.getLocalization('searchResultDescriptionOrdering');
+        return "";
     }
 }
 
@@ -233,7 +285,7 @@ Oskari.registerLocalization(
             "desc": "",
             "tabTitle": "Geokoodauspalvelu",
             "invalid_characters": "Hakusanassa on kiellettyjä merkkejä. Sallittuja merkkejä ovat aakkoset (a-ö, A-Ö), numerot (0-9) sekä piste (.), pilkku (,), yhdysviiva (-) ja huutomerkki (!). Voit myös korvata sanassa yhden merkin kysymysmerkillä (?) tai sana loppuosan jokerimerkillä (*).",
-            "searchDescription": "Hae paikkoja paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella.",
+            "searchDescription": "Hae paikkoja kartalta osoittamalla tai paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella.",
             "searchAssistance": "Anna hakusana",
             "searchResultCount": "Hakusanalla löytyi",
             "searchResultCount2": "hakutulosta.",
@@ -278,15 +330,30 @@ class GeocodingExtension extends UIDefaultExtension {
         autocomplete: true,
         urls: {
             search: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/search?',
-            similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?'
+            similar: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/searchterm/similar?',
+            reverse: 'https://avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v1/pelias/reverse?'
         }
 
     }
 
+    viewState = undefined;
+    view = undefined;
+
+
     eventHandlers = {
         'userinterface.ExtensionUpdatedEvent': ev => {
-            console.log(ev);
+            console.log(ev.getViewState(), ev.getViewInfo(), ev.getExtension().getName(), ev);
+            if ("Search" === ev.getExtension().getName()) {
+                this.viewState = ev.getViewState();
+            }
+        },
+        'MapClickedEvent': ev => {
+            let lonlat = ev.getLonLat();
+            if (this.viewState && this.viewState !== "close") {
+                this.view.nearby(lonlat);
+            }
         }
+
     }
 
     afterStart(sandbox) {
@@ -295,6 +362,7 @@ class GeocodingExtension extends UIDefaultExtension {
 
         let view = new GeocodingView(this);
         view.createUi(tab);
+        this.view = view;
 
         sandbox.request(this, Oskari.requestBuilder('Search.AddTabRequest')(
             title, tab, 2, 'oskari_search_tabpanel_header'));
@@ -329,7 +397,7 @@ function register(impl, bundleId, implClassName) {
         implClassName);
 }
 
-register(GeocodingBundle,'geocoding',"Oskari.geocoding.GeocodingBundle");
+register(GeocodingBundle, 'geocoding', "Oskari.geocoding.GeocodingBundle");
 
 
 
