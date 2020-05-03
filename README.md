@@ -1,6 +1,6 @@
 # beta-karttakuva-oskari
 
-a proof of concept geocoding add-on for Oskari/Paikkatietoikkuna
+a proof of concept geocoding add-on for Oskari/Paikkatietoikkuna with search, reverse and similar
 - geocoding/GeocodingService.js service requests
 - geocoding/GeocodingView.js tab to be added to UI
 - geocoding/GeocodingExtension.js extension module stuff
