@@ -285,7 +285,7 @@ Oskari.registerLocalization(
             "desc": "",
             "tabTitle": "Geokoodauspalvelu",
             "invalid_characters": "Hakusanassa on kiellettyjä merkkejä. Sallittuja merkkejä ovat aakkoset (a-ö, A-Ö), numerot (0-9) sekä piste (.), pilkku (,), yhdysviiva (-) ja huutomerkki (!). Voit myös korvata sanassa yhden merkin kysymysmerkillä (?) tai sana loppuosan jokerimerkillä (*).",
-            "searchDescription": "Hae paikkoja kartalta osoittamalla tai paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella.",
+            "searchDescription": "Hae paikkoja paikannimen, kunnan, seutukunnan sekä paikkatyyppien perusteella. Voit myös osoittaa paikkoja kartalta, jolloin haetaan lähimmät paikat. Huom! Kartoilla esitettävät karttanimet eivät ole samaa aineistoa.",
             "searchAssistance": "Anna hakusana",
             "searchResultCount": "Hakusanalla löytyi",
             "searchResultCount2": "hakutulosta.",
