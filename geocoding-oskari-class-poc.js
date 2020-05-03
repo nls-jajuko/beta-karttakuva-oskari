@@ -321,9 +321,9 @@ Oskari.registerLocalization(
     });
 
 /** extension module class */
-const UIDefaultExtension = Oskari.clazz.get('Oskari.userinterface.extension.DefaultModule');
+const BasicBundle = Oskari.clazz.get('Oskari.BasicBundle');
 
-class GeocodingExtension extends UIDefaultExtension {
+class GeocodingExtension extends BasicBundle {
     name = 'Geocoding';
 
     conf = {
@@ -356,9 +356,15 @@ class GeocodingExtension extends UIDefaultExtension {
 
     }
 
-    afterStart(sandbox) {
+    getSandbox() { return this.sandbox; }
+    getLocalization(key) { return this.locale[key]; }
+
+    start(sandbox) {
+        super.start(sandbox);
+
+        this.locale = Oskari.getLocalization(this.name);
         let tab = document.createElement("div"),
-            title = this.getLocalization('tabTitle');
+            title = Oskari.getMsg(this.name,'tabTitle');
 
         let view = new GeocodingView(this);
         view.createUi(tab);
@@ -402,4 +408,4 @@ register(GeocodingBundle, 'geocoding', "Oskari.geocoding.GeocodingBundle");
 
 
 /* test */
-new GeocodingBundle().create().start();
+new GeocodingBundle().create().start(Oskari.getSandbox());

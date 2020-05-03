@@ -1,9 +1,9 @@
 import GeocodingView from './GeocodingView';
 
 /** extension module class */
-const UIDefaultExtension = Oskari.clazz.get('Oskari.userinterface.extension.DefaultModule');
+const BasicBundle = Oskari.clazz.get('Oskari.BasicBundle');
 
-export class GeocodingExtension extends UIDefaultExtension {
+export class GeocodingExtension extends BasicBundle {
     name = 'Geocoding';
 
     conf = {
@@ -36,9 +36,16 @@ export class GeocodingExtension extends UIDefaultExtension {
 
     }
 
-    afterStart(sandbox) {
+    /* some glue required? */
+    getSandbox() { return this.sandbox; }
+    getLocalization(key) { return this.locale[key]; }
+
+    start(sandbox) {
+        super.start(sandbox);
+
+        this.locale = Oskari.getLocalization(this.name);
         let tab = document.createElement("div"),
-            title = this.getLocalization('tabTitle');
+            title = Oskari.getMsg(this.name,'tabTitle');
 
         let view = new GeocodingView(this);
         view.createUi(tab);
