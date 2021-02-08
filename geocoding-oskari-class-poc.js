@@ -8,9 +8,11 @@ class GeocodingService {
 
     constructor(urls, epsgCode, lang) {
         this.urls = urls;
-        this.queryParams.crs = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
-        this.queryParams['request-crs'] = 'http://www.opengis.net/def/crs/EPSG/0/' + epsgCode;
-        this.queryParams.lang = lang;
+        this.queryParams = { ...this.queryParams, ...{
+            crs : `http://www.opengis.net/def/crs/EPSG/0/${epsgCode}`,
+            'request-crs': `http://www.opengis.net/def/crs/EPSG/0/${epsgCode}`,
+            lang : lang } 
+        };
     }
 
     search(searchString) {
