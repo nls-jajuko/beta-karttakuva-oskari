@@ -411,3 +411,4 @@ register(GeocodingBundle, 'geocoding', "Oskari.geocoding.GeocodingBundle");
 
 /* test */
 new GeocodingBundle().create().start(Oskari.getSandbox());
+Oskari.getSandbox().postRequestByName('userinterface.UpdateExtensionRequest',[undefined,'attach','Search'])
